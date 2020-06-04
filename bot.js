@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const ytdl = require('ytdl-core');
+const config = require('./config.json');
 
 const kick = (message) => {
 	const user = message.mentions.users.first();
@@ -88,4 +89,4 @@ client.on('message', (message) => {
 	executeCommand(message);
 });
 
-client.login('NzE4MDY4MDY5Mzg1MjQwNjU2.XtjfaA.8VPZUaNo8FAnhq4zbRGyVf_CUfk');
+client.login(config.token);
