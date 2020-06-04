@@ -1,92 +1,50 @@
+const fs = require('fs');
 const Discord = require('discord.js');
+
+const { prefix, token } = require('./config.json');
+
 const client = new Discord.Client();
-const ytdl = require('ytdl-core');
-const config = require('./config.json');
+client.commands = new Discord.Collection();
 
-const kick = (message) => {
-	const user = message.mentions.users.first();
-	if (user) {
-		const member = message.guild.member(user);
-		if (member) {
-			member
-				.kick('Optional reason that will display in the audit logs')
-				.then(() => {
-					message.reply(`Successfully kicked ${user.tag}`);
-				})
-				.catch((err) => {
-					message.reply('I was unable to kick the member');
-					console.error(err);
-				});
-		}
-		else {
-			message.reply('That user isn\'t in this guild!');
-		}
-	}
-	else {
-		message.reply('You didn\'t mention the user to kick!');
-	}
-};
+const commandFiles = fs
+	.readdirSync('./commands')
+	.filter((file) => file.endsWith('.js'));
 
-const ban = (message) => {
-	const user = message.mentions.users.first();
-	if (user) {
-		const member = message.guild.member(user);
-		if (member) {
-			member
-				.ban({
-					reason: 'They were bad!',
-				})
-				.then(() => {
-					message.reply(`Successfully banned ${user.tag}`);
-				})
-				.catch((err) => {
-					message.reply('I was unable to ban the member');
-					console.error(err);
-				});
-		}
-		else {
-			message.reply('That user isn\'t in this guild!');
-		}
-	}
-	else {
-		message.reply('You didn\'t mention the user to ban!');
-	}
-};
-
-const waitForMember = (message) =>{
-	return new Promise(resolve => {
-		resolve(message.member.voice.channel.join());
-	});
-};
-
-async function play(message) {
-    console.log(message.content);
-	if (message.member.voice.channel) {
-		const connection = await waitForMember(message);
-		connection.play(
-			ytdl(message.content.split(' ')[1], { filter: 'audioonly' }),
-		);
-	}
-	else {
-		message.reply('You need to join a voice channel first!');
-	}
+for (const file of commandFiles) {
+	const command = require(`./commands/${file}`);
+	client.commands.set(command.name, command);
 }
 
-const executeCommand = (message) => {
-	if (message.content.startsWith('!kick')) {
-		kick(message);
-	}
-	else if (message.content.startsWith('!ban')) {
-		ban(message);
-	}
-	else if (message.content.startsWith('/play')) {
-		play(message);
-	}
-};
-
 client.on('message', (message) => {
-	if (!message.guild) return;
-	executeCommand(message);
+	if (!message.guild ||
+    !message.content.startsWith(prefix) ||
+    message.author.bot) return;
+
+	const args = message.content.slice(prefix.length).split(/ +/);
+	const commandName = args.shift().toLowerCase();
+
+	if (!client.commands.has(commandName)) return;
+
+	const command = client.commands.get(commandName);
+
+	if (command.args && !args.length) {
+		let reply = `You didn't provide any arguments, ${message.author}!`;
+
+		if (command.usage) {
+			reply += `\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\``;
+		}
+
+		return message.channel.send(reply);
+	}
+
+	try {
+		command.execute(message, args);
+	}
+	catch (error) {
+		console.error(error);
+		message.reply('there was an error trying to execute that command!');
+	}
+
 });
 
-client.login(config.token);
+client.login(token);

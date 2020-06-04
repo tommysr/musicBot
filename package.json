@@ -17,9 +17,11 @@
   },
   "homepage": "https://github.com/tommysr/musicBot#readme",
   "dependencies": {
+    "@discordjs/opus": "^0.3.2",
     "discord.js": "^12.2.0",
     "eslint": "^7.1.0",
-    "node-opus": "^0.3.3",
+    "fs": "0.0.1-security",
+    "sodium": "^3.0.2",
     "ytdl-core": "^3.1.0"
   }
 }
