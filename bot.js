@@ -52,6 +52,3 @@ client.on('message', async (message) => {
 
 client.login(token);
 
-module.exports = {
-	queue,
-};

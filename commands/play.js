@@ -2,7 +2,6 @@ const ytdl = require('ytdl-core');
 
 function play(guild, song, queue) {
 
-	console.log(queue);
 	const serverQueue = queue.get(guild.id);
 	if (!song) {
 		serverQueue.voiceChannel.leave();
@@ -12,8 +11,8 @@ function play(guild, song, queue) {
 
 
 	const dispatcher = serverQueue.connection
-		.play(ytdl(song.url))
-		.on('finish', () => {
+		.play(ytdl(song.url, { filter: 'audioonly' }))
+		.on('end', () => {
 			serverQueue.songs.shift();
 			play(guild, serverQueue.songs[0], queue);
 		})
@@ -74,3 +73,4 @@ module.exports = {
 		}
 	},
 };
+
