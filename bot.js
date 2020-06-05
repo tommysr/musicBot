@@ -6,6 +6,8 @@ const { prefix, token } = require('./config.json');
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 
+const queue = new Map();
+
 const commandFiles = fs
 	.readdirSync('./commands')
 	.filter((file) => file.endsWith('.js'));
@@ -15,10 +17,10 @@ for (const file of commandFiles) {
 	client.commands.set(command.name, command);
 }
 
-client.on('message', (message) => {
+client.on('message', async (message) => {
 	if (!message.guild ||
     !message.content.startsWith(prefix) ||
-    message.author.bot) return;
+	message.author.bot) return;
 
 	const args = message.content.slice(prefix.length).split(/ +/);
 	const commandName = args.shift().toLowerCase();
@@ -38,7 +40,8 @@ client.on('message', (message) => {
 	}
 
 	try {
-		command.execute(message, args);
+		if(command.queue) {command.execute(message, args, queue);}
+		else {command.execute(message, args);}
 	}
 	catch (error) {
 		console.error(error);
@@ -48,3 +51,7 @@ client.on('message', (message) => {
 });
 
 client.login(token);
+
+module.exports = {
+	queue,
+};
